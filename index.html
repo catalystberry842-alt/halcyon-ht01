@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HALCYON HT-01 — Flying Tourbillon Configurator</title>
+  <meta name="description" content="Interactive 3D haute horlogerie configurator for the HALCYON HT-01 Flying Tourbillon." />
+</head>
+<body>
+  <div id="app" class="studio-stage">
+    <!-- WebGL 3D Viewport -->
+    <canvas id="watch-canvas" aria-label="Interactive 3D HALCYON HT-01 Flying Tourbillon watch"></canvas>
+
+    <!-- 3D Projected Horological Hotspots Overlay -->
+    <div id="hotspots-layer" class="hotspots-layer" aria-hidden="true"></div>
+
+    <!-- Crown Winding Feedback Toast -->
+    <div id="wind-feedback" class="wind-feedback" aria-live="polite">
+      <span class="wind-dot"></span>
+      <span id="wind-feedback-text">MAINSPRING WOUND · +4.0 H</span>
+    </div>
+
+    <!-- Top-Left Brand Identity -->
+    <header class="brand-header">
+      <h1 class="brand-wordmark">HALCYON</h1>
+      <p class="brand-subtitle">
+        <span class="model-code">HT-01</span>
+        <span class="model-name">FLYING TOURBILLON</span>
+      </p>
+      <div class="brand-rule" aria-hidden="true"></div>
+    </header>
+
+    <!-- Top-Right Live Horological Readouts -->
+    <aside class="telemetry-readout" aria-label="Live movement telemetry">
+      <div class="live-clock" id="live-clock">
+        <span id="clock-hm">09:15</span><span class="clock-sec" id="clock-s">:06</span>
+      </div>
+      <div class="telemetry-line" id="telemetry-freq">4 Hz · 28,800 vph</div>
+      <div class="telemetry-line" id="telemetry-reserve">reserve <span id="reserve-value">52.0</span> h</div>
+    </aside>
+
+    <!-- Right Frosted-Glass Configurator Panel -->
+    <aside class="config-panel" aria-label="Watch configurator">
+      <nav class="panel-tabs" role="tablist">
+        <button class="panel-tab is-active" role="tab" aria-selected="true" data-tab="configure" id="tab-configure">CONFIGURE</button>
+        <button class="panel-tab" role="tab" aria-selected="false" data-tab="engineering" id="tab-engineering">ENGINEERING</button>
+        <button class="panel-tab" role="tab" aria-selected="false" data-tab="studio" id="tab-studio">STUDIO</button>
+      </nav>
+
+      <!-- TAB 1: CONFIGURE -->
+      <div class="tab-content is-active" id="panel-configure" role="tabpanel" aria-labelledby="tab-configure">
+        <section class="config-group" data-group="case">
+          <div class="group-header">
+            <span class="group-label">CASE</span>
+            <span class="group-value" id="value-case">Platinum 950</span>
+          </div>
+          <div class="swatch-row" id="swatches-case" role="radiogroup" aria-label="Case material"></div>
+        </section>
+
+        <section class="config-group" data-group="bezel">
+          <div class="group-header">
+            <span class="group-label">BEZEL &amp; INDICES</span>
+            <span class="group-value" id="value-bezel">White diamond</span>
+          </div>
+          <div class="swatch-row" id="swatches-bezel" role="radiogroup" aria-label="Bezel and indices"></div>
+        </section>
+
+        <section class="config-group" data-group="movement">
+          <div class="group-header">
+            <span class="group-label">MOVEMENT FINISH</span>
+            <span class="group-value" id="value-movement">Anthracite</span>
+          </div>
+          <div class="swatch-row" id="swatches-movement" role="radiogroup" aria-label="Movement finish"></div>
+        </section>
+
+        <section class="config-group" data-group="hands">
+          <div class="group-header">
+            <span class="group-label">HANDS</span>
+            <span class="group-value" id="value-hands">Polished rhodium</span>
+          </div>
+          <div class="swatch-row" id="swatches-hands" role="radiogroup" aria-label="Hands finish"></div>
+        </section>
+
+        <section class="config-group config-group-last" data-group="strap">
+          <div class="group-header">
+            <span class="group-label">STRAP</span>
+            <span class="group-value" id="value-strap">Black alligator</span>
+          </div>
+          <div class="swatch-row" id="swatches-strap" role="radiogroup" aria-label="Strap leather"></div>
+        </section>
+
+        <footer class="reference-footer">
+          <span class="reference-label">Reference</span>
+          <span class="reference-code" id="reference-code">HT-01 · PT · D · AN/RH · AL-BK</span>
+        </footer>
+      </div>
+
+      <!-- TAB 2: ENGINEERING -->
+      <div class="tab-content" id="panel-engineering" role="tabpanel" aria-labelledby="tab-engineering">
+        <section class="eng-section">
+          <div class="group-header">
+            <span class="group-label">CALIBRE HOTSPOTS</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggle-hotspots" />
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+          <div class="hotspot-pills" id="hotspot-list"></div>
+        </section>
+
+        <section class="eng-section">
+          <div class="group-header">
+            <span class="group-label">ESCAPEMENT RATE</span>
+            <span class="group-value mono-val" id="rate-readout">1.0×</span>
+          </div>
+          <div class="segmented-control" id="speed-control">
+            <button class="seg-btn" data-speed="0.25">0.25×</button>
+            <button class="seg-btn is-active" data-speed="1">1×</button>
+            <button class="seg-btn" data-speed="4">4×</button>
+            <button class="seg-btn" data-speed="0">PAUSE</button>
+          </div>
+        </section>
+
+        <section class="eng-section">
+          <div class="group-header">
+            <span class="group-label">MAINSPRING BARREL</span>
+            <span class="group-value mono-val" id="eng-reserve-val">52.0 / 72.0 h</span>
+          </div>
+          <div class="reserve-bar-track">
+            <div class="reserve-bar-fill" id="reserve-bar-fill" style="width: 72.2%;"></div>
+          </div>
+          <div class="eng-actions">
+            <button class="action-btn" id="btn-wind-crown">WIND CROWN (+4H)</button>
+            <button class="action-btn" id="btn-sync-time">SYNC LOCAL TIME</button>
+          </div>
+        </section>
+
+        <section class="eng-section eng-specs">
+          <div class="spec-row"><span>CALIBRE</span><span class="mono-val">HT-01 Manual</span></div>
+          <div class="spec-row"><span>DIMENSIONS</span><span class="mono-val">41.0 × 10.4 mm</span></div>
+          <div class="spec-row"><span>TOURBILLON</span><span class="mono-val">60s Cantilevered</span></div>
+          <div class="spec-row"><span>JEWELS / STONES</span><span class="mono-val">29 Rubies · 60 Stones</span></div>
+        </section>
+      </div>
+
+      <!-- TAB 3: STUDIO -->
+      <div class="tab-content" id="panel-studio" role="tabpanel" aria-labelledby="tab-studio">
+        <section class="eng-section">
+          <div class="group-header">
+            <span class="group-label">CAMERA VIEWPOINTS</span>
+          </div>
+          <div class="camera-grid" id="camera-presets">
+            <button class="cam-btn is-active" data-cam="hero">Hero 3/4</button>
+            <button class="cam-btn" data-cam="dial">Dial Macro</button>
+            <button class="cam-btn" data-cam="tourbillon">Tourbillon</button>
+            <button class="cam-btn" data-cam="crown">Crown Profile</button>
+            <button class="cam-btn" data-cam="caseback">Exhibition Back</button>
+            <button class="cam-btn" data-cam="overhead">Top Down</button>
+          </div>
+        </section>
+
+        <section class="eng-section">
+          <div class="group-header">
+            <span class="group-label">LIGHTING RIG</span>
+            <span class="group-value" id="value-lighting">Atelier Noir</span>
+          </div>
+          <div class="segmented-control" id="lighting-control">
+            <button class="seg-btn is-active" data-light="noir">Noir</button>
+            <button class="seg-btn" data-light="geneva">Geneva</button>
+            <button class="seg-btn" data-light="champagne">Warm</button>
+          </div>
+        </section>
+
+        <section class="eng-section studio-toggles">
+          <div class="toggle-row">
+            <span class="group-label">IDLE AUTO-ROTATE</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggle-autorotate" checked />
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <span class="group-label">DIAMOND BLOOM</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggle-bloom" checked />
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <span class="group-label">DEPTH OF FIELD</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggle-dof" checked />
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <span class="group-label">SAPPHIRE CRYSTAL</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggle-crystal" checked />
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </section>
+      </div>
+    </aside>
+
+    <!-- Bottom-Left Interaction Prompt -->
+    <footer class="interaction-hint">
+      DRAG TO ORBIT &nbsp;·&nbsp; SCROLL TO ZOOM &nbsp;·&nbsp; CLICK THE CROWN TO WIND
+    </footer>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
